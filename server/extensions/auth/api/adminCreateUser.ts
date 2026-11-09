@@ -7,8 +7,7 @@ import { authenticate } from '../middlewares/authentication';
 import type { AuthenticatedRequest } from '../middlewares/authentication';
 import { isAdminEmailDomain } from '../common/isAdminEmailDomain';
 import { generatePassword } from '../common/generatePassword';
-import { flags } from '../../../mods/flags';
-import { send } from '../../email';
+import { send, isEmailDeliveryEnabled } from '../../email';
 import { adminInviteEmail } from '../../email/templates/adminInvite';
 import { env } from '../../../config/env';
 import type { AdminCreateUserBody } from '../types';
@@ -88,8 +87,8 @@ export async function handleAdminCreateUser(req: Request): Promise<Response> {
     created_at: now,
   });
 
-  const sesEnabled = await flags.isEnabled('SES_ENABLED');
-  const shouldSend = sendEmail === true && sesEnabled && env.ADMIN_INVITE_EMAIL_ENABLED;
+  const deliveryEnabled = await isEmailDeliveryEnabled();
+  const shouldSend = sendEmail === true && deliveryEnabled && env.ADMIN_INVITE_EMAIL_ENABLED;
 
   let emailSent = false;
   if (shouldSend) {

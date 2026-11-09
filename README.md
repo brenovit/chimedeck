@@ -45,6 +45,7 @@ Now, it’s yours to use, customize, and grow with.
 ## Documentation
 
 - [Features and GIF Demos](FEATURES.md)
+- [Email delivery (SMTP / Gmail / AWS SES)](docs/email.md)
 
 ## Application Setup
 

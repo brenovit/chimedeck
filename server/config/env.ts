@@ -190,6 +190,24 @@ export const env = {
   SES_REGION: Bun.env['SES_REGION'] ?? 'us-east-1',
   SES_FROM_ADDRESS: Bun.env['SES_FROM_ADDRESS'] ?? 'noreply@example.com',
 
+  // Email provider selection: "ses" | "smtp" | "console".
+  // When unset, falls back to the legacy behaviour: SES when FLAG_SES_ENABLED=true,
+  // otherwise console. See server/extensions/email/config for resolution.
+  EMAIL_PROVIDER: (Bun.env['EMAIL_PROVIDER'] ?? '').trim().toLowerCase(),
+
+  // Generic SMTP (Gmail, Outlook, Mailgun, Postfix, ...) — used when EMAIL_PROVIDER=smtp.
+  // For Gmail: SMTP_HOST=smtp.gmail.com, SMTP_PORT=587, SMTP_USER=you@gmail.com,
+  // SMTP_PASSWORD=<16-character App Password>.
+  SMTP_HOST: Bun.env['SMTP_HOST'] ?? '',
+  SMTP_PORT: parseInt(Bun.env['SMTP_PORT'] ?? '587', 10),
+  // "true" = implicit TLS (port 465). "false" = STARTTLS upgrade (port 587).
+  // When unset, implicit TLS is used only for port 465.
+  SMTP_SECURE: Bun.env['SMTP_SECURE'] ?? '',
+  SMTP_USER: Bun.env['SMTP_USER'] ?? '',
+  SMTP_PASSWORD: Bun.env['SMTP_PASSWORD'] ?? '',
+  // Defaults to SMTP_USER when unset. Accepts "Name <address>" form.
+  SMTP_FROM_ADDRESS: Bun.env['SMTP_FROM_ADDRESS'] ?? '',
+
   // Feature flag provider configuration
   FEATURE_FLAGS_PROVIDER: Bun.env['FEATURE_FLAGS_PROVIDER'] as
     | 'flagsmith'
@@ -242,7 +260,8 @@ export const env = {
   ADMIN_EMAIL_DOMAINS: Bun.env['ADMIN_EMAIL_DOMAINS'] ?? 'journeyh.io',
 
   // Controls invitation emails for admin-created accounts specifically.
-  // SES_ENABLED must ALSO be true — this flag exists so operators can run SES
+  // Email delivery must ALSO be enabled (EMAIL_PROVIDER=ses|smtp, or legacy
+  // FLAG_SES_ENABLED=true) — this flag exists so operators can send email
   // for other flows (e.g. email verification, password reset) without
   // automatically enabling admin invite emails.
   ADMIN_INVITE_EMAIL_ENABLED: Bun.env['ADMIN_INVITE_EMAIL_ENABLED'] === 'true',
@@ -251,7 +270,8 @@ export const env = {
   // and all channels remain enabled for all users.
   NOTIFICATION_PREFERENCES_ENABLED: Bun.env['NOTIFICATION_PREFERENCES_ENABLED'] !== 'false',
 
-  // Email notifications — both SES_ENABLED and this flag must be true for notification emails to send.
+  // Email notifications — email delivery (EMAIL_PROVIDER=ses|smtp, or legacy SES_ENABLED)
+  // and this flag must both be on for notification emails to send.
   EMAIL_NOTIFICATIONS_ENABLED: Bun.env['EMAIL_NOTIFICATIONS_ENABLED'] === 'true',
 
   // Health Check feature — when false, all /health-checks routes return 404
