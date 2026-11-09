@@ -1,9 +1,10 @@
 // emailDispatch.ts — Gated email notification dispatch helper.
 // Checks feature flags and user preferences before rendering a template and
-// calling SES. Email failures are fire-and-forget; they never throw.
+// sending via the configured email provider (SES or SMTP). Email failures are
+// fire-and-forget; they never throw.
 import { db } from '../../../common/db';
 import { flags } from '../../../mods/flags';
-import { sendViaSes } from '../../email/mods/ses';
+import { send, isEmailDeliveryEnabled } from '../../email';
 import { env } from '../../../config/env';
 import { preferenceGuard } from './preferenceGuard';
 import type { NotificationType } from './preferenceGuard';
@@ -31,11 +32,11 @@ export async function dispatchNotificationEmail({
 }): Promise<void> {
   try {
     // Gate 1: server feature flags — both must be on
-    const [sesEnabled, emailNotificationsEnabled] = await Promise.all([
-      flags.isEnabled('SES_ENABLED'),
+    const [deliveryEnabled, emailNotificationsEnabled] = await Promise.all([
+      isEmailDeliveryEnabled(),
       flags.isEnabled('EMAIL_NOTIFICATIONS_ENABLED'),
     ]);
-    if (!sesEnabled || !emailNotificationsEnabled) return;
+    if (!deliveryEnabled || !emailNotificationsEnabled) return;
 
     // Gate 2: per-type email preference — skip when the caller already resolved it.
     if (emailEnabled !== undefined) {
@@ -52,7 +53,7 @@ export async function dispatchNotificationEmail({
     // Render template
     const { subject, html, text } = renderTemplate(type, templateData);
 
-    await sendViaSes({ to: recipient.email, subject, html, text });
+    await send({ to: recipient.email, subject, html, text });
   } catch (err) {
     // Never propagate — email failure must not block the originating mutation
     console.warn('[emailDispatch] Failed to send notification email:', err);

@@ -3,6 +3,7 @@ import { initSentry } from './common/monitoring/sentry';
 import { handleUnhandledError } from './common/middlewares/errorHandler';
 import { appConfig } from './config/app';
 import { flags } from './mods/flags';
+import { isEmailDeliveryEnabled } from './extensions/email';
 import { logRequest } from './mods/logger';
 import { applySecurityHeaders } from './mods/helmet';
 import {
@@ -122,7 +123,9 @@ async function router(req: Request): Promise<Response> {
   }
 
   if (path === '/api/v1/flags' && req.method === 'GET') {
-    const sesEnabled = await flags.isEnabled('SES_ENABLED');
+    // `sesEnabled` keeps its name for client compatibility; it now means "a real
+    // email provider (SES or SMTP) is active".
+    const sesEnabled = await isEmailDeliveryEnabled();
     const notificationPreferencesEnabled = await flags.isEnabled(
       'NOTIFICATION_PREFERENCES_ENABLED'
     );

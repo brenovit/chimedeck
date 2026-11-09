@@ -3,6 +3,7 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { emailConfig } from '../config';
 import { env } from '../../../config/env';
+import type { EmailPayload } from '../types';
 
 const sesClient = new SESClient({
   region: emailConfig.sesRegion,
@@ -15,12 +16,7 @@ const sesClient = new SESClient({
   },
 });
 
-export interface EmailPayload {
-  to: string;
-  subject: string;
-  html: string;
-  text: string;
-}
+export type { EmailPayload };
 
 export async function sendViaSes({ to, subject, html, text }: EmailPayload): Promise<void> {
   await sesClient.send(
